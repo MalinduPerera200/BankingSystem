@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-deployment-structure>
+    <ear>
+        <dependencies>
+            <module name="org.apache.commons.lang3"/>
+            <module name="org.apache.commons.collections"/>
+        </dependencies>
+    </ear>
+</jboss-deployment-structure>
