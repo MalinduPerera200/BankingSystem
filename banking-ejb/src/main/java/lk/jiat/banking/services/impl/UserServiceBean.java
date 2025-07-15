@@ -4,7 +4,7 @@ import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import lk.jiat.banking.dao.UserDAO;
 import lk.jiat.banking.entities.User;
-import lk.jiat.banking.exceptions.BankingException; // Assuming you have a custom exception
+import lk.jiat.banking.exceptions.BankingException;
 import lk.jiat.banking.security.PasswordService;
 import lk.jiat.banking.services.interfaces.UserService;
 
@@ -17,19 +17,11 @@ public class UserServiceBean implements UserService {
     private UserDAO userDAO;
 
     @EJB
-    private PasswordService passwordService; // Inject PasswordService
+    private PasswordService passwordService;
 
     @Override
     public Optional<User> findByUsername(String username) {
         return userDAO.findByUsername(username);
-    }
-
-    @Override
-    public void registerUser(User user) {
-        // Before saving, hash the password
-        String hashedPassword = passwordService.hashPassword(user.getPassword());
-        user.setPassword(hashedPassword);
-        userDAO.save(user);
     }
 
     @Override
@@ -44,9 +36,9 @@ public class UserServiceBean implements UserService {
     @Override
     public void updateUser(User user) {
         // If password is changed, hash it again
-        if (user.getPassword() != null && !user.getPassword().isEmpty() && !user.getPassword().startsWith("$2a$")) { // Check if it's not already hashed by BCrypt or similar
-            String hashedPassword = passwordService.hashPassword(user.getPassword());
-            user.setPassword(hashedPassword);
+        if (user.getPasswordHash() != null && !user.getPasswordHash().isEmpty() && !user.getPasswordHash().startsWith("$2a$")) { // Check if it's not already hashed by BCrypt or similar
+            String hashedPassword = passwordService.hashPassword(user.getPasswordHash());
+            user.setPasswordHash(hashedPassword);
         }
         userDAO.update(user);
     }

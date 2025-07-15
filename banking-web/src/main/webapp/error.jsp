@@ -393,8 +393,8 @@
     <%
         }
 
-        // Get exception details if this page is configured as an error page
-        Throwable exception = (Throwable) request.getAttribute("javax.servlet.error.exception");
+        // The implicit 'exception' object is available because of isErrorPage="true".
+        // We don't need to declare it again.
         Integer statusCode = (Integer) request.getAttribute("javax.servlet.error.status_code");
         String servletName = (String) request.getAttribute("javax.servlet.error.servlet_name");
         String requestUri = (String) request.getAttribute("javax.servlet.error.request_uri");
@@ -422,17 +422,12 @@
         <h3>Technical Details</h3>
         <p><strong>Exception Type:</strong> <%= exception.getClass().getName() %></p>
         <p><strong>Message:</strong> <%= exception.getMessage() != null ? exception.getMessage() : "No specific message available" %></p>
-        <%
-            // For security and user experience, avoid showing full stack traces in production.
-            // This is for development/debugging purposes.
-            // In a production environment, you might log the stack trace and show a generic message.
-            // if (application.getInitParameter("displayStackTraces") != null &&
-            //     Boolean.parseBoolean(application.getInitParameter("displayStackTraces"))) {
-        %>
+        <%--
+            For security and user experience, avoid showing full stack traces in production.
+            This is for development/debugging purposes.
+            In a production environment, you might log the stack trace and show a generic message.
+        --%>
         <%-- <pre><% exception.printStackTrace(new java.io.PrintWriter(out)); %></pre> --%>
-        <%
-            // }
-        %>
     </div>
     <%
         }

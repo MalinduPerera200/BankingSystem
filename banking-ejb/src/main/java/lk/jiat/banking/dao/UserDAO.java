@@ -24,6 +24,9 @@ public class UserDAO {
             return Optional.empty();
         }
     }
+    public void createUser(User user) {
+        em.persist(user);
+    }
 
     public void save(User user) {
         em.persist(user);

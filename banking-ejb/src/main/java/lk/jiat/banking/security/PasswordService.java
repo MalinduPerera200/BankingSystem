@@ -1,81 +1,96 @@
 package lk.jiat.banking.security;
 
-
 import jakarta.ejb.Stateless;
+import org.mindrot.jbcrypt.BCrypt; // You'll need to add this library as a dependency
+import java.util.logging.Logger; // Import the Logger
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Base64;
 
 /**
- * Service for hashing and verifying passwords.
- * For production, consider using BCrypt or Argon2 for stronger security.
+ * Service for securely hashing and verifying passwords using BCrypt.
+ * BCrypt is a strong, slow hashing algorithm designed to make brute-force
+ * attacks computationally expensive, even with powerful hardware.
+ *
+ * To use BCrypt, you need to add a dependency to your project.
+ * For Maven, you can add:
+ * <dependency>
+ * <groupId>org.mindrot</groupId>
+ * <artifactId>jbcrypt</artifactId>
+ * <version>0.4</version> * </dependency>
  */
-@Stateless
+@Stateless // <<< IMPORTANT: ADD THIS ANNOTATION
 public class PasswordService {
 
-    private static final int SALT_LENGTH = 16; // 16 bytes for salt
+    private static final Logger LOGGER = Logger.getLogger(PasswordService.class.getName()); // Initialize logger
 
     /**
-     * Hashes a plain-text password with a randomly generated salt.
-     * @param password The plain-text password.
-     * @return The hashed password string in format "salt:hash".
-     * @throws RuntimeException if hashing fails.
+     * Hashes a plain-text password using BCrypt.
+     * A salt is automatically generated and embedded within the hash.
+     *
+     * @param plainPassword The password in plain text.
+     * @return The BCrypt hashed password.
      */
-    public String hashPassword(String password) {
-        try {
-            // Generate a random salt
-            SecureRandom random = new SecureRandom();
-            byte[] salt = new byte[SALT_LENGTH];
-            random.nextBytes(salt);
-
-            // Hash the password with the salt
-            MessageDigest md = MessageDigest.getInstance("SHA-256"); // You can use "SHA-512" or other algorithms
-            md.update(salt);
-            byte[] hashedPassword = md.digest(password.getBytes());
-
-            // Combine salt and hash, then encode to Base64
-            String saltStr = Base64.getEncoder().encodeToString(salt);
-            String hashStr = Base64.getEncoder().encodeToString(hashedPassword);
-
-            return saltStr + ":" + hashStr;
-
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error hashing password: " + e.getMessage(), e);
-        }
+    public String hashPassword(String plainPassword) {
+        // BCrypt.hashpw(password, BCrypt.gensalt()) handles both salting and hashing.
+        // BCrypt.gensalt() generates a random salt and determines the workload factor.
+        return BCrypt.hashpw(plainPassword, BCrypt.gensalt());
     }
 
     /**
-     * Verifies a plain-text password against a hashed password.
-     * @param plainPassword The plain-text password provided by the user.
-     * @param storedHashedPassword The hashed password retrieved from the database (format "salt:hash").
-     * @return true if passwords match, false otherwise.
+     * Verifies a plain-text password against a BCrypt hashed password.
+     * The salt is extracted from the hashed password during the verification process.
+     *
+     * @param plainPassword The password in plain text to verify.
+     * @param hashedPassword The BCrypt hashed password from the database.
+     * @return true if the plain password matches the hashed password, false otherwise.
      */
-    public boolean verifyPassword(String plainPassword, String storedHashedPassword) {
-        if (storedHashedPassword == null || !storedHashedPassword.contains(":")) {
-            return false; // Invalid stored format
-        }
+//    public boolean verifyPassword(String plainPassword, String hashedPassword) {
+//        if (plainPassword == null || hashedPassword == null) {
+//            LOGGER.warning("PasswordService: Plain password or hashed password is null during verification.");
+//            return false;
+//        }
+//
+//        LOGGER.info("PasswordService: Verifying. Plain text length: " + plainPassword.length() + ", Hashed password length: " + hashedPassword.length());
+//        LOGGER.info("Plain password (first 5 chars for debug): " + plainPassword.substring(0, Math.min(plainPassword.length(), 5)));
+//        LOGGER.info("Hashed password (first 5 chars for debug): " + hashedPassword.substring(0, Math.min(hashedPassword.length(), 5)));
+//
+//        boolean isMatch = BCrypt.checkpw(plainPassword, hashedPassword);
+//        LOGGER.info("PasswordService: BCrypt.checkpw result: " + isMatch);
+//
+//        return isMatch;
+//    }
+    // Add this temporary debugging method to your PasswordService.java
 
-        try {
-            String[] parts = storedHashedPassword.split(":");
-            if (parts.length != 2) {
-                return false; // Invalid format
-            }
-
-            byte[] salt = Base64.getDecoder().decode(parts[0]);
-            byte[] storedHash = Base64.getDecoder().decode(parts[1]);
-
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.update(salt);
-            byte[] newHash = md.digest(plainPassword.getBytes());
-
-            // Compare the newly generated hash with the stored hash
-            return MessageDigest.isEqual(newHash, storedHash);
-
-        } catch (NoSuchAlgorithmException | IllegalArgumentException e) {
-            System.err.println("Error verifying password: " + e.getMessage());
+    public boolean verifyPasswordDebug(String plainPassword, String hashedPassword) {
+        if (plainPassword == null || hashedPassword == null) {
+            LOGGER.warning("PasswordService: Plain password or hashed password is null during verification.");
             return false;
         }
+
+        LOGGER.info("=== DETAILED PASSWORD DEBUG ===");
+        LOGGER.info("Plain password: '" + plainPassword + "'");
+        LOGGER.info("Plain password length: " + plainPassword.length());
+        LOGGER.info("Plain password bytes: " + java.util.Arrays.toString(plainPassword.getBytes()));
+
+        LOGGER.info("Hashed password: '" + hashedPassword + "'");
+        LOGGER.info("Hashed password length: " + hashedPassword.length());
+        LOGGER.info("Hashed password bytes: " + java.util.Arrays.toString(hashedPassword.getBytes()));
+
+        // Check if hash is valid BCrypt format
+        if (!hashedPassword.startsWith("$2a$") && !hashedPassword.startsWith("$2b$") && !hashedPassword.startsWith("$2y$")) {
+            LOGGER.warning("Invalid BCrypt hash format!");
+            return false;
+        }
+
+        // Test with a fresh hash of the same password
+        String testHash = BCrypt.hashpw(plainPassword, BCrypt.gensalt());
+        LOGGER.info("Fresh hash of same password: " + testHash);
+        boolean testVerify = BCrypt.checkpw(plainPassword, testHash);
+        LOGGER.info("Fresh hash verification: " + testVerify);
+
+        boolean isMatch = BCrypt.checkpw(plainPassword, hashedPassword);
+        LOGGER.info("Original hash verification: " + isMatch);
+        LOGGER.info("=== END DEBUG ===");
+
+        return isMatch;
     }
 }

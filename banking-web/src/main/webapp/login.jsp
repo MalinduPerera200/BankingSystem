@@ -214,6 +214,7 @@
             transform: translateY(0);
         }
 
+        /* Error Message Styling */
         .error-message {
             background: rgba(255, 82, 82, 0.1);
             border: 1px solid rgba(255, 82, 82, 0.3);
@@ -223,6 +224,7 @@
             margin-bottom: 20px;
             font-size: 14px;
             backdrop-filter: blur(10px);
+            /* Initially hidden if no error message from server */
             opacity: 0;
             transform: translateY(-10px);
             transition: all 0.3s ease;
@@ -263,7 +265,7 @@
             margin-right: 5px;
         }
 
-        /* Loading state */
+        /* Loading state (you can keep this if you want to add a loading indicator for server submission) */
         .login-btn.loading {
             pointer-events: none;
             opacity: 0.8;
@@ -315,13 +317,18 @@
         <p class="brand-tagline">Your trusted financial partner</p>
     </div>
 
-    <div class="error-message" id="errorMessage"></div>
+    <div class="error-message <% if (request.getAttribute("errorMessage") != null) { out.print("show"); } %>" id="errorMessage">
+        <% if (request.getAttribute("errorMessage") != null) { %>
+        <%= request.getAttribute("errorMessage") %>
+        <% } %>
+    </div>
 
-    <form id="loginForm" action="/login" method="post">
+    <form id="loginForm" action="<%= request.getContextPath() %>/login" method="post">
         <div class="form-group">
             <label for="username">Username</label>
             <div class="input-wrapper">
-                <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                <input type="text" id="username" name="username" placeholder="Enter your username" required
+                       value="<%= request.getParameter("username") != null ? request.getParameter("username") : "" %>">
             </div>
         </div>
 
@@ -349,61 +356,23 @@
 <script>
     const loginForm = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
-    const errorMessage = document.getElementById('errorMessage');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
+    const errorMessageDiv = document.getElementById('errorMessage'); // Rename to avoid conflict with function
 
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const username = usernameInput.value.trim();
-        const password = passwordInput.value;
-
-        // Clear previous error
-        errorMessage.classList.remove('show');
-
-        // Add loading state
+    // Function to show "Signing in..." state
+    loginForm.addEventListener('submit', function() {
         loginBtn.classList.add('loading');
         loginBtn.querySelector('span').textContent = 'Signing in...';
-
-        // Simulate API call delay
-        setTimeout(() => {
-            loginBtn.classList.remove('loading');
-            loginBtn.querySelector('span').textContent = 'Sign In';
-
-            // Demo validation
-            if (username === 'admin' && password === 'password') {
-                // Success animation
-                loginBtn.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
-                loginBtn.querySelector('span').textContent = 'Success!';
-
-                setTimeout(() => {
-                    alert('Login successful! Welcome to SecureBank.');
-                    loginBtn.style.background = 'linear-gradient(45deg, #ff6b6b, #ffa500)';
-                    loginBtn.querySelector('span').textContent = 'Sign In';
-                }, 1000);
-            } else {
-                showError('Invalid credentials. Please check your username and password.');
-
-                // Shake animation for error
-                loginForm.style.animation = 'shake 0.5s ease-in-out';
-                setTimeout(() => {
-                    loginForm.style.animation = '';
-                }, 500);
-            }
-        }, 1500);
+        // Clear error message when submitting
+        errorMessageDiv.classList.remove('show');
     });
 
-    function showError(message) {
-        errorMessage.textContent = message;
-        errorMessage.classList.add('show');
-    }
-
     function showForgotPassword() {
-        window.location.href = '/banking/registration.jsp';
+        window.location.href = '<%= request.getContextPath() %>/register'; // Assuming register page for simplicity
     }
 
-    // Add shake animation
+    // Add shake animation (already defined in your CSS)
     const style = document.createElement('style');
     style.textContent = `
             @keyframes shake {
@@ -417,13 +386,23 @@
     // Add focus animations
     [usernameInput, passwordInput].forEach(input => {
         input.addEventListener('focus', function() {
-            this.parentElement.style.transform = 'scale(1.02)';
+            this.closest('.input-wrapper').style.transform = 'scale(1.02)'; // Apply to wrapper
         });
 
         input.addEventListener('blur', function() {
-            this.parentElement.style.transform = 'scale(1)';
+            this.closest('.input-wrapper').style.transform = 'scale(1)'; // Apply to wrapper
         });
     });
+
+    // If there's an error message from the server on page load, add shake animation
+    window.onload = function() {
+        if (errorMessageDiv.classList.contains('show')) {
+            loginForm.style.animation = 'shake 0.5s ease-in-out';
+            setTimeout(() => {
+                loginForm.style.animation = '';
+            }, 500);
+        }
+    };
 </script>
 </body>
 </html>
