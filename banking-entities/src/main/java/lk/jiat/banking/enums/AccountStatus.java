@@ -1,4 +1,9 @@
 package lk.jiat.banking.enums;
 
-public class AccountStatus {
+public enum AccountStatus {
+    ACTIVE,
+    INACTIVE,
+    CLOSED,
+    PENDING_APPROVAL,
+    FROZEN
 }

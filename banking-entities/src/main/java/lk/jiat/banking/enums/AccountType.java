@@ -1,4 +1,9 @@
 package lk.jiat.banking.enums;
 
-public class AccountType {
+public enum AccountType {
+    SAVINGS,
+    CHECKING,
+    FIXED_DEPOSIT,
+    LOAN_ACCOUNT,
+    CURRENT
 }
