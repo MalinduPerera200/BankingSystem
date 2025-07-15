@@ -6,7 +6,7 @@ import lk.jiat.banking.enums.UserRole;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "users") // Assuming your user table is named 'users'
+@Table(name = "users")
 public class User implements Serializable {
 
     @Id
@@ -17,24 +17,21 @@ public class User implements Serializable {
     private String username;
 
     @Column(nullable = false)
-    private String passwordHash; // Stores the BCrypt hashed password
+    private String passwordHash;
 
-    @Enumerated(EnumType.STRING) // Store enum as String in DB
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private UserRole role; // e.g., ADMIN, CUSTOMER, TELLER, AUDITOR
+    private UserRole role;
 
-    // Default constructor
     public User() {
     }
 
-    // Constructor with fields
     public User(String username, String passwordHash, UserRole role) {
         this.username = username;
         this.passwordHash = passwordHash;
         this.role = role;
     }
 
-    // Getters and Setters
     public Long getId() {
         return id;
     }

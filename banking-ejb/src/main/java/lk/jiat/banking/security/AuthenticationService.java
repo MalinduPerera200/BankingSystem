@@ -4,7 +4,6 @@ import jakarta.ejb.EJB;
 import jakarta.ejb.Stateless;
 import lk.jiat.banking.dao.UserDAO;
 import lk.jiat.banking.entities.User;
-import lk.jiat.banking.enums.UserRole;
 
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -20,9 +19,6 @@ public class AuthenticationService {
     @EJB
     private PasswordService passwordService;
 
-    /**
-     * Authenticates a user based on username and password.
-     */
     public Optional<User> authenticate(String username, String password) {
         LOGGER.info("Attempting to authenticate user: " + username);
 
@@ -33,7 +29,6 @@ public class AuthenticationService {
             LOGGER.info("User found: " + user.getUsername() + ", Role: " + user.getRole());
             LOGGER.info("Verifying password for user: " + user.getUsername());
 
-            // This is where the issue might be - make sure we're calling the right method
             boolean passwordMatches = passwordService.verifyPasswordDebug(password, user.getPasswordHash());
 
             if (passwordMatches) {
@@ -48,7 +43,6 @@ public class AuthenticationService {
         return Optional.empty();
     }
 
-    // Add these helper methods for debugging
     public String hashPassword(String plainPassword) {
         return passwordService.hashPassword(plainPassword);
     }

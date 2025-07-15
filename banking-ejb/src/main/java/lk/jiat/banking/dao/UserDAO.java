@@ -11,7 +11,7 @@ import java.util.Optional;
 @Stateless
 public class UserDAO {
 
-    @PersistenceContext(unitName = "bankingPU") // Ensure this matches your persistence unit name
+    @PersistenceContext(unitName = "bankingPU")
     private EntityManager em;
 
     public Optional<User> findByUsername(String username) {
@@ -32,7 +32,6 @@ public class UserDAO {
         em.persist(user);
     }
 
-    // You might also need methods like findById, update, delete etc.
     public User findById(Long id) {
         return em.find(User.class, id);
     }
