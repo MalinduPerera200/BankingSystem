@@ -380,7 +380,7 @@
             <li>
                 <p><strong>Account No:</strong> <%= account.getAccountNumber() %></p>
                 <p><strong>Type:</strong> <%= account.getAccountType() %></p>
-                <p><strong>Balance:</strong> $<%= account.getBalance() %></p>
+                <p><strong>Balance:</strong> LKR <%= account.getBalance() %></p>
                 <p><strong>Status:</strong> <%= account.getAccountStatus() %></p>
                 <p><strong>Opened:</strong> <%= account.getOpenedDate() %></p>
             </li>

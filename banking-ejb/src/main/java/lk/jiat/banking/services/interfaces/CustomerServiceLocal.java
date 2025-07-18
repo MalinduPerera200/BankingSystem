@@ -13,4 +13,5 @@ public interface CustomerServiceLocal {
     List<Customer> getAllCustomers();
     Customer updateCustomer(Customer customer) throws BankingException;
     void deleteCustomer(Long customerId) throws BankingException;
+    Customer findByNic(String nic);
 }

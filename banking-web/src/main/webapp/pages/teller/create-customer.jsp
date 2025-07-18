@@ -204,6 +204,49 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
         }
+        /* --- General Select Dropdown Styling --- */
+
+        .form-group select {
+            /* --- Appearance and Sizing --- */
+            appearance: none; /* Removes default browser styling */
+            -webkit-appearance: none; /* For Safari/Chrome */
+            -moz-appearance: none; /* For Firefox */
+            display: block;
+            width: 100%;
+            padding: 15px; /* Adjust padding to match other inputs */
+            font-size: 16px; /* Match font size */
+            line-height: 1.5;
+            color: #ffffff; /* White text color */
+
+            /* --- Background and Border --- */
+            background-color: rgba(255, 255, 255, 0.1); /* Translucent white background */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px; /* Rounded corners */
+
+            /* --- Custom Arrow --- */
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 12px; /* Size of the arrow icon */
+        }
+
+        /* --- Styling for the Dropdown Options --- */
+        .form-group select option {
+            background-color: #3e2e72; /* A dark purple that could match your theme */
+            color: #ffffff;
+        }
+
+        /* --- Focus State --- */
+        .form-group select:focus {
+            outline: none;
+            border-color: #4CAF50; /* Green border on focus to match button */
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+
+        /* --- Placeholder Option Color --- */
+        .form-group select option[value=""] {
+            color: #cccccc;
+        }
 
         .back-button:hover {
             background: rgba(108, 117, 125, 0.3);
@@ -330,6 +373,17 @@
         <div class="form-group">
             <label for="dob">Date of Birth</label>
             <input type="date" id="dob" name="dateOfBirth">
+        </div>
+        <div class="form-group">
+            <label for="accountType">Account Type</label>
+            <select class="form-control" id="accountType" name="accountType" required>
+                <option value="">Select Account Type</option>
+                <option value="SAVINGS">Savings</option>
+                <option value="CHECKING">Checking</option>
+                <option value="FIXED_DEPOSIT">Fixed Deposit</option>
+                <option value="LOAN_ACCOUNT">Loan Account</option>
+                <option value="CURRENT">Current</option>
+            </select>
         </div>
 
         <button type="submit" class="submit-btn">Create Customer</button>
