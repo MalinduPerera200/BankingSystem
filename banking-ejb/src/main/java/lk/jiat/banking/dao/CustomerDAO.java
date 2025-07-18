@@ -2,6 +2,7 @@ package lk.jiat.banking.dao;
 
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceContext;
 import lk.jiat.banking.entities.Customer;
 
@@ -23,6 +24,16 @@ public class CustomerDAO {
 
     public List<Customer> findAll() {
         return em.createQuery("SELECT c FROM Customer c", Customer.class).getResultList();
+    }
+
+    public Customer findByNic(String nic) {
+        try {
+            return em.createQuery("SELECT c FROM Customer c WHERE c.nic = :nic", Customer.class)
+                    .setParameter("nic", nic)
+                    .getSingleResult();
+        } catch (NoResultException e) {
+            return null; // No customer found with the given NIC
+        }
     }
 
     public void update(Customer customer) {

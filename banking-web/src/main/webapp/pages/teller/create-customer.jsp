@@ -279,14 +279,17 @@
     </div>
 
     <%
-        String status = request.getParameter("status");
-        if ("success".equals(status)) {
+        // Get messages from request attributes (for errors) or request parameters (for success)
+        String errorMessage = (String) request.getAttribute("errorMessage");
+        String statusMessage = request.getParameter("status");
+
+        if (errorMessage != null && !errorMessage.isEmpty()) {
     %>
-    <div class="message success">Customer created successfully!</div>
+    <div class="message error"><%= errorMessage %></div>
     <%
-    } else if ("error".equals(status)) {
+    } else if (statusMessage != null && !statusMessage.isEmpty()) {
     %>
-    <div class="message error">Error creating customer: <%= request.getParameter("message") != null ? request.getParameter("message") : "Unknown error." %></div>
+    <div class="message success"><%= statusMessage %></div>
     <%
         }
     %>

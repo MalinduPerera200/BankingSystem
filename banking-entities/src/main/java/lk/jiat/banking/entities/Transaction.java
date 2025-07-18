@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "transactions")
 public class Transaction {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,33 +18,51 @@ public class Transaction {
     @JoinColumn(name = "account_id", nullable = false)
     private Account account;
 
-    @Column(name = "amount", nullable = false, precision = 19, scale = 2)
+    @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "transaction_type", nullable = false)
+    @Column(nullable = false)
     private TransactionType transactionType;
 
-    @Column(name = "transaction_date", nullable = false)
-    private LocalDateTime transactionDate;
-
-    @Column(name = "description", length = 500)
+    @Column(nullable = false)
     private String description;
 
-    // Constructors
+    @Column(nullable = false)
+    private LocalDateTime transactionDate;
+
+    /**
+     * Default constructor for JPA.
+     */
     public Transaction() {
-        this.transactionDate = LocalDateTime.now();
     }
 
+    /**
+     * Constructor to create a new transaction.
+     * The transaction date is set automatically.
+     *
+     * @param account         The account associated with the transaction.
+     * @param amount          The amount of the transaction.
+     * @param transactionType The type of transaction (DEPOSIT, WITHDRAWAL, TRANSFER).
+     * @param description     A brief description of the transaction.
+     */
     public Transaction(Account account, BigDecimal amount, TransactionType transactionType, String description) {
-        this();
         this.account = account;
         this.amount = amount;
         this.transactionType = transactionType;
         this.description = description;
     }
 
+    /**
+     * Automatically sets the transactionDate before the entity is persisted.
+     */
+    @PrePersist
+    protected void onCreate() {
+        this.transactionDate = LocalDateTime.now();
+    }
+
     // Getters and Setters
+
     public Long getId() {
         return id;
     }
@@ -76,14 +95,6 @@ public class Transaction {
         this.transactionType = transactionType;
     }
 
-    public LocalDateTime getTransactionDate() {
-        return transactionDate;
-    }
-
-    public void setTransactionDate(LocalDateTime transactionDate) {
-        this.transactionDate = transactionDate;
-    }
-
     public String getDescription() {
         return description;
     }
@@ -92,15 +103,11 @@ public class Transaction {
         this.description = description;
     }
 
-    @Override
-    public String toString() {
-        return "Transaction{" +
-                "id=" + id +
-                ", account=" + (account != null ? account.getAccountNumber() : "null") +
-                ", amount=" + amount +
-                ", transactionType=" + transactionType +
-                ", transactionDate=" + transactionDate +
-                ", description='" + description + '\'' +
-                '}';
+    public LocalDateTime getTransactionDate() {
+        return transactionDate;
+    }
+
+    public void setTransactionDate(LocalDateTime transactionDate) {
+        this.transactionDate = transactionDate;
     }
 }

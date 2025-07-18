@@ -7,6 +7,11 @@
 
     <persistence-unit name="bankingPU" transaction-type="JTA">
         <jta-data-source>bankingDS</jta-data-source>
+
+        <class>lk.jiat.banking.entities.Customer</class>
+        <class>lk.jiat.banking.entities.Account</class>
+        <class>lk.jiat.banking.entities.Transaction</class>
+        <class>lk.jiat.banking.entities.User</class>
         <properties>
             <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
             <property name="jakarta.persistence.sharedCache.mode" value="NONE"/>

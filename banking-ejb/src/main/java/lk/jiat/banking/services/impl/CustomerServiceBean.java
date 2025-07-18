@@ -16,11 +16,16 @@ public class CustomerServiceBean implements CustomerServiceLocal {
 
     @Override
     public Customer createCustomer(Customer customer) throws BankingException {
-        // Add validation logic here
+
         if (customer.getNic() == null || customer.getNic().isEmpty()) {
             throw new BankingException("Customer NIC cannot be empty.");
         }
-        // Further validation for uniqueness, format, etc.
+
+        Customer existingCustomer = customerDAO.findByNic(customer.getNic());
+        if (existingCustomer != null) {
+            throw new BankingException("Customer with NIC " + customer.getNic() + " already exists.");
+        }
+
         customerDAO.save(customer);
         return customer;
     }
@@ -36,7 +41,6 @@ public class CustomerServiceBean implements CustomerServiceLocal {
 
     @Override
     public List<Customer> getAllCustomers() {
-        // Implement method in CustomerDAO
         return customerDAO.findAll();
     }
 
@@ -45,7 +49,6 @@ public class CustomerServiceBean implements CustomerServiceLocal {
         if (customer.getId() == null) {
             throw new BankingException("Customer ID is required for update.");
         }
-        // Add validation logic here
         customerDAO.update(customer);
         return customer;
     }

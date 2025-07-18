@@ -1,9 +1,10 @@
 package lk.jiat.banking.services.impl;
 
 import jakarta.ejb.Stateless;
-import jakarta.ejb.EJB;
-import lk.jiat.banking.dao.AccountDAO;
-import lk.jiat.banking.dao.TransactionDAO;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 import lk.jiat.banking.entities.Account;
 import lk.jiat.banking.entities.Transaction;
 import lk.jiat.banking.enums.TransactionType;
@@ -19,149 +20,91 @@ import java.util.List;
 @Stateless
 public class AccountServiceBean implements AccountServiceLocal {
 
-    @EJB
-    private AccountDAO accountDAO;
-    @EJB
-    private TransactionDAO transactionDAO;
+    @PersistenceContext(unitName = "bankingPU")
+    private EntityManager em;
 
     @Override
-    public Account createAccount(Account account) throws BankingException {
-        // Add validation logic (e.g., account number format, initial balance)
-        if (account.getAccountNumber() == null || account.getAccountNumber().isEmpty()) {
-            throw new BankingException("Account number cannot be empty.");
+    public void createAccount(Account account) throws BankingException {
+        // Find by account number instead of primary key if account number is not the primary key
+        TypedQuery<Account> query = em.createQuery("SELECT a FROM Account a WHERE a.accountNumber = :accountNumber", Account.class);
+        query.setParameter("accountNumber", account.getAccountNumber());
+        if (!query.getResultList().isEmpty()) {
+            throw new BankingException("An account with this number already exists.");
         }
-        if (account.getBalance() == null || account.getBalance().compareTo(BigDecimal.ZERO) < 0) {
-            throw new BankingException("Initial balance cannot be negative.");
-        }
-        accountDAO.save(account);
-        return account;
-    }
-
-    @Override
-    public Account getAccountById(Long accountId) {
-        Account account = accountDAO.findById(accountId);
-        if (account == null) {
-            throw new AccountNotFoundException("Account with ID " + accountId + " not found.");
-        }
-        return account;
-    }
-
-    @Override
-    public List<Account> getAccountsByCustomerId(Long customerId) {
-        // Implement this in AccountDAO
-        return accountDAO.findByCustomerId(customerId);
-    }
-
-    @Override
-    public Account updateAccount(Account account) throws BankingException {
-        if (account.getId() == null) {
-            throw new BankingException("Account ID is required for update.");
-        }
-        accountDAO.update(account);
-        return account;
-    }
-
-    @Override
-    public void deleteAccount(Long accountId) throws BankingException {
-        Account account = accountDAO.findById(accountId);
-        if (account != null) {
-            accountDAO.delete(account);
-        } else {
-            throw new AccountNotFoundException("Account with ID " + accountId + " not found for deletion.");
-        }
+        em.persist(account);
     }
 
     @Override
     public void deposit(String accountNumber, BigDecimal amount) throws BankingException {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BankingException("Deposit amount must be positive.");
         }
-        Account account = accountDAO.findByAccountNumber(accountNumber);
-        if (account == null) {
-            throw new AccountNotFoundException("Account " + accountNumber + " not found.");
-        }
-
+        Account account = findAccountByNumber(accountNumber);
         account.setBalance(account.getBalance().add(amount));
-        accountDAO.update(account);
+        em.merge(account);
 
-        Transaction transaction = new Transaction();
-        transaction.setAccount(account);
-        transaction.setAmount(amount);
-        transaction.setTransactionType(TransactionType.DEPOSIT);
-        transaction.setTransactionDate(LocalDateTime.now());
-        transaction.setDescription("Deposit to account " + accountNumber);
-        transactionDAO.save(transaction);
+        // CORRECTED CONSTRUCTOR CALL
+        Transaction transaction = new Transaction(account, amount, TransactionType.DEPOSIT, "Teller Deposit");
+        em.persist(transaction);
     }
 
     @Override
     public void withdraw(String accountNumber, BigDecimal amount) throws BankingException {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BankingException("Withdrawal amount must be positive.");
         }
-        Account account = accountDAO.findByAccountNumber(accountNumber);
-        if (account == null) {
-            throw new AccountNotFoundException("Account " + accountNumber + " not found.");
-        }
-
+        Account account = findAccountByNumber(accountNumber);
         if (account.getBalance().compareTo(amount) < 0) {
-            throw new InsufficientFundsException("Insufficient funds in account " + accountNumber);
+            throw new InsufficientFundsException("Insufficient funds for this withdrawal.");
         }
-
         account.setBalance(account.getBalance().subtract(amount));
-        accountDAO.update(account);
+        em.merge(account);
 
-        Transaction transaction = new Transaction();
-        transaction.setAccount(account);
-        transaction.setAmount(amount);
-        transaction.setTransactionType(TransactionType.WITHDRAWAL);
-        transaction.setTransactionDate(LocalDateTime.now());
-        transaction.setDescription("Withdrawal from account " + accountNumber);
-        transactionDAO.save(transaction);
+        // CORRECTED CONSTRUCTOR CALL
+        Transaction transaction = new Transaction(account, amount, TransactionType.WITHDRAWAL, "Teller Withdrawal");
+        em.persist(transaction);
     }
 
     @Override
     public void transfer(String fromAccountNumber, String toAccountNumber, BigDecimal amount) throws BankingException {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new BankingException("Transfer amount must be positive.");
         }
-        if (fromAccountNumber.equals(toAccountNumber)) {
-            throw new BankingException("Cannot transfer to the same account.");
-        }
-
-        Account fromAccount = accountDAO.findByAccountNumber(fromAccountNumber);
-        if (fromAccount == null) {
-            throw new AccountNotFoundException("Source account " + fromAccountNumber + " not found.");
-        }
-
-        Account toAccount = accountDAO.findByAccountNumber(toAccountNumber);
-        if (toAccount == null) {
-            throw new AccountNotFoundException("Destination account " + toAccountNumber + " not found.");
-        }
+        Account fromAccount = findAccountByNumber(fromAccountNumber);
+        Account toAccount = findAccountByNumber(toAccountNumber);
 
         if (fromAccount.getBalance().compareTo(amount) < 0) {
-            throw new InsufficientFundsException("Insufficient funds in source account " + fromAccountNumber);
+            throw new InsufficientFundsException("Insufficient funds for this transfer.");
         }
 
         fromAccount.setBalance(fromAccount.getBalance().subtract(amount));
         toAccount.setBalance(toAccount.getBalance().add(amount));
 
-        accountDAO.update(fromAccount);
-        accountDAO.update(toAccount);
+        em.merge(fromAccount);
+        em.merge(toAccount);
 
-        Transaction debitTransaction = new Transaction();
-        debitTransaction.setAccount(fromAccount);
-        debitTransaction.setAmount(amount);
-        debitTransaction.setTransactionType(TransactionType.TRANSFER_OUT);
-        debitTransaction.setTransactionDate(LocalDateTime.now());
-        debitTransaction.setDescription("Transfer to account " + toAccountNumber);
-        transactionDAO.save(debitTransaction);
+        // CORRECTED CONSTRUCTOR CALLS
+        Transaction fromTransaction = new Transaction(fromAccount, amount, TransactionType.TRANSFER_IN, "Transfer to " + toAccountNumber);
+        Transaction toTransaction = new Transaction(toAccount, amount, TransactionType.DEPOSIT, "Transfer from " + fromAccountNumber);
+        em.persist(fromTransaction);
+        em.persist(toTransaction);
+    }
 
-        Transaction creditTransaction = new Transaction();
-        creditTransaction.setAccount(toAccount);
-        creditTransaction.setAmount(amount);
-        creditTransaction.setTransactionType(TransactionType.TRANSFER_IN);
-        creditTransaction.setTransactionDate(LocalDateTime.now());
-        creditTransaction.setDescription("Transfer from account " + fromAccountNumber);
-        transactionDAO.save(creditTransaction);
+    @Override
+    public Account findAccountByNumber(String accountNumber) throws BankingException {
+        TypedQuery<Account> query = em.createQuery("SELECT a FROM Account a WHERE a.accountNumber = :accountNumber", Account.class);
+        query.setParameter("accountNumber", accountNumber);
+        try {
+            return query.getSingleResult();
+        } catch (NoResultException e) {
+            throw new AccountNotFoundException("Account with number " + accountNumber + " not found.");
+        }
+    }
+
+    @Override
+    public List<Account> findAccountsByCustomerId(Long customerId) throws BankingException {
+        TypedQuery<Account> query = em.createQuery("SELECT a FROM Account a WHERE a.customer.id = :customerId", Account.class);
+        query.setParameter("customerId", customerId);
+        return query.getResultList();
     }
 }

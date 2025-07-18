@@ -1,65 +1,60 @@
 package lk.jiat.banking.entities;
 
 import jakarta.persistence.*;
-import lk.jiat.banking.enums.AccountStatus;
 import lk.jiat.banking.enums.AccountType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "accounts")
 public class Account {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "account_number", length = 20)
+    private String accountNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @Column(name = "account_number", unique = true, nullable = false, length = 20)
-    private String accountNumber;
-
-    @Column(name = "balance", nullable = false, precision = 19, scale = 2)
+    @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal balance;
 
-    @Enumerated(EnumType.STRING)
+    // ======== මෙතන වෙනස්කම සිදු කර ඇත ========
+    @Enumerated(EnumType.STRING) // Enum එකේ නම String එකක් ලෙස save කිරීමට.
     @Column(name = "account_type", nullable = false)
     private AccountType accountType;
+    // =======================================
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "account_status", nullable = false)
-    private AccountStatus accountStatus;
+    @Column(name = "created_date", nullable = false)
+    private LocalDateTime createdDate;
 
-    @Column(name = "opened_date", nullable = false)
-    private LocalDateTime openedDate;
-
-    @Column(name = "closed_date")
-    private LocalDateTime closedDate;
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Transaction> transactions;
 
     // Constructors
+
     public Account() {
-        this.openedDate = LocalDateTime.now();
-        this.balance = BigDecimal.ZERO;
-        this.accountStatus = AccountStatus.ACTIVE; // Default status
     }
 
-    public Account(Customer customer, String accountNumber, BigDecimal balance, AccountType accountType) {
-        this();
-        this.customer = customer;
+    public Account(String accountNumber, Customer customer, BigDecimal balance, AccountType accountType, LocalDateTime createdDate) {
         this.accountNumber = accountNumber;
+        this.customer = customer;
         this.balance = balance;
         this.accountType = accountType;
+        this.createdDate = createdDate;
     }
 
     // Getters and Setters
-    public Long getId() {
-        return id;
+
+    public String getAccountNumber() {
+        return accountNumber;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
     }
 
     public Customer getCustomer() {
@@ -68,14 +63,6 @@ public class Account {
 
     public void setCustomer(Customer customer) {
         this.customer = customer;
-    }
-
-    public String getAccountNumber() {
-        return accountNumber;
-    }
-
-    public void setAccountNumber(String accountNumber) {
-        this.accountNumber = accountNumber;
     }
 
     public BigDecimal getBalance() {
@@ -94,41 +81,19 @@ public class Account {
         this.accountType = accountType;
     }
 
-    public AccountStatus getAccountStatus() {
-        return accountStatus;
+    public LocalDateTime getCreatedDate() {
+        return createdDate;
     }
 
-    public void setAccountStatus(AccountStatus accountStatus) {
-        this.accountStatus = accountStatus;
+    public void setCreatedDate(LocalDateTime createdDate) {
+        this.createdDate = createdDate;
     }
 
-    public LocalDateTime getOpenedDate() {
-        return openedDate;
+    public List<Transaction> getTransactions() {
+        return transactions;
     }
 
-    public void setOpenedDate(LocalDateTime openedDate) {
-        this.openedDate = openedDate;
-    }
-
-    public LocalDateTime getClosedDate() {
-        return closedDate;
-    }
-
-    public void setClosedDate(LocalDateTime closedDate) {
-        this.closedDate = closedDate;
-    }
-
-    @Override
-    public String toString() {
-        return "Account{" +
-                "id=" + id +
-                ", customer=" + (customer != null ? customer.getId() : "null") + // Avoid recursion
-                ", accountNumber='" + accountNumber + '\'' +
-                ", balance=" + balance +
-                ", accountType=" + accountType +
-                ", accountStatus=" + accountStatus +
-                ", openedDate=" + openedDate +
-                ", closedDate=" + closedDate +
-                '}';
+    public void setTransactions(List<Transaction> transactions) {
+        this.transactions = transactions;
     }
 }

@@ -22,7 +22,6 @@
             overflow: hidden;
         }
 
-        /* Animated background elements */
         .bg-shapes {
             position: absolute;
             top: 0;
@@ -214,7 +213,6 @@
             transform: translateY(0);
         }
 
-        /* Error Message Styling */
         .error-message {
             background: rgba(255, 82, 82, 0.1);
             border: 1px solid rgba(255, 82, 82, 0.3);
@@ -224,7 +222,6 @@
             margin-bottom: 20px;
             font-size: 14px;
             backdrop-filter: blur(10px);
-            /* Initially hidden if no error message from server */
             opacity: 0;
             transform: translateY(-10px);
             transition: all 0.3s ease;
@@ -265,7 +262,6 @@
             margin-right: 5px;
         }
 
-        /* Loading state (you can keep this if you want to add a loading indicator for server submission) */
         .login-btn.loading {
             pointer-events: none;
             opacity: 0.8;
@@ -347,10 +343,6 @@
     <div class="forgot-password">
         <a href="#" onclick="showForgotPassword()">Forgot your password?</a>
     </div>
-
-    <div class="security-badge">
-        256-bit SSL encryption
-    </div>
 </div>
 
 <script>
@@ -358,21 +350,18 @@
     const loginBtn = document.getElementById('loginBtn');
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
-    const errorMessageDiv = document.getElementById('errorMessage'); // Rename to avoid conflict with function
+    const errorMessageDiv = document.getElementById('errorMessage');
 
-    // Function to show "Signing in..." state
     loginForm.addEventListener('submit', function() {
         loginBtn.classList.add('loading');
         loginBtn.querySelector('span').textContent = 'Signing in...';
-        // Clear error message when submitting
         errorMessageDiv.classList.remove('show');
     });
 
     function showForgotPassword() {
-        window.location.href = '<%= request.getContextPath() %>/register'; // Assuming register page for simplicity
+        window.location.href = '<%= request.getContextPath() %>/register';
     }
 
-    // Add shake animation (already defined in your CSS)
     const style = document.createElement('style');
     style.textContent = `
             @keyframes shake {
@@ -383,7 +372,6 @@
         `;
     document.head.appendChild(style);
 
-    // Add focus animations
     [usernameInput, passwordInput].forEach(input => {
         input.addEventListener('focus', function() {
             this.closest('.input-wrapper').style.transform = 'scale(1.02)'; // Apply to wrapper
@@ -394,7 +382,6 @@
         });
     });
 
-    // If there's an error message from the server on page load, add shake animation
     window.onload = function() {
         if (errorMessageDiv.classList.contains('show')) {
             loginForm.style.animation = 'shake 0.5s ease-in-out';
